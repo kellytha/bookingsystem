@@ -1,69 +1,143 @@
-import Image from "next/image";
+import { UserButton } from "@clerk/nextjs";
+import { auth, currentUser } from "@clerk/nextjs/server";
+import Link from "next/link";
+import { Suspense } from "react";
+import { hasAdminRole } from "./lib/admin-access";
+
+async function UserSessionActions() {
+  const { userId, sessionClaims } = await auth();
+  const user = userId ? await currentUser() : null;
+  const hasAdminPortalAccess = hasAdminRole(sessionClaims, user?.publicMetadata);
+
+  return (
+    <div className="flex flex-wrap items-center justify-end gap-3">
+      {userId && user ? (
+        <div className="flex items-center gap-3">
+          {hasAdminPortalAccess && (
+            <Link
+              href="/admin"
+              className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 sm:px-4"
+            >
+              <span className="sm:hidden">Admin</span>
+              <span className="hidden sm:inline">Admin portal</span>
+            </Link>
+          )}
+          <span className="hidden text-sm text-slate-600 sm:inline">
+            {user.firstName ?? "Member"}
+          </span>
+          <UserButton />
+        </div>
+      ) : (
+        <>
+          <Link
+            href="/sign-in"
+            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+          >
+            Sign in
+          </Link>
+          <Link
+            href="/sign-up"
+            className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
+          >
+            Create account
+          </Link>
+        </>
+      )}
+    </div>
+  );
+}
+
+function UserBookingCTA() {
+  return (
+    <Link
+      href="/book"
+      className="rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+    >
+      Browse today&apos;s sessions
+    </Link>
+  );
+}
+
+const sessions = [
+  { name: "Deep Tissue Massage", duration: "60 min", price: "$120", description: "Targeted tension relief" },
+  { name: "Relaxation Massage", duration: "60 min", price: "$100", description: "Restore your balance" },
+  { name: "Restorative Facial", duration: "45 min", price: "$85", description: "A refreshing reset" },
+];
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
+    <main className="min-h-screen bg-slate-100 text-slate-900" style={{ colorScheme: "light" }}>
+      <header className="border-b border-slate-200 bg-white">
+        <div className="mx-auto flex min-h-16 max-w-7xl flex-wrap items-center justify-between gap-3 px-6 py-3">
+          <Link href="/" className="text-sm font-semibold tracking-wide">
+            Aura Wellness <span className="font-normal text-slate-500">/ Booking</span>
+          </Link>
+          <Suspense fallback={<div className="h-10 w-36 animate-pulse rounded-lg bg-slate-100" />}>
+            <UserSessionActions />
+          </Suspense>
+        </div>
+      </header>
+
+      <div className="mx-auto max-w-7xl px-6 py-12 sm:py-16">
+        <section className="mx-auto max-w-3xl text-center">
+          <p className="text-sm font-medium text-teal-700">Wellness, within reach</p>
+          <h1 className="mt-3 text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl">
+            Book wellness sessions in minutes.
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
+            Secure your next massage, consultation, or wellness checkup with a simple,
+            modern booking experience built for busy clients.
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <Suspense fallback={<div className="h-12 w-48 animate-pulse rounded-lg bg-slate-200" />}>
+              <UserBookingCTA />
+            </Suspense>
+            <Link
+              href="#today"
+              className="rounded-lg border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+            >
+              View available sessions
+            </Link>
+          </div>
+        </section>
+
+        <section
+          id="today"
+          aria-labelledby="today-heading"
+          className="mx-auto mt-14 max-w-3xl scroll-mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-5 py-4">
+            <div>
+              <h2 id="today-heading" className="font-semibold text-slate-900">
+                Available services
+              </h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Choose a treatment to see appointment times.
+              </p>
+            </div>
+            <span className="rounded-full bg-teal-50 px-3 py-1 text-xs font-medium text-teal-700">
+              Open for bookings
+            </span>
+          </div>
+          <div className="divide-y divide-slate-100">
+            {sessions.map((service) => (
+              <Link
+                key={service.name}
+                href={`/book?service=${encodeURIComponent(service.name)}`}
+                className="flex items-center justify-between gap-4 px-5 py-4 transition hover:bg-slate-50"
+              >
+                <div>
+                  <p className="font-medium text-slate-900">{service.name}</p>
+                  <p className="mt-1 text-sm text-slate-500">{service.duration} · {service.description}</p>
+                </div>
+                <span className="flex shrink-0 items-center gap-3 text-sm font-medium text-teal-700">
+                  {service.price} <span>Book →</span>
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      </div>
+    </main>
   );
 }
